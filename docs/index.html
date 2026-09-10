@@ -1,0 +1,1526 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Matterhorn Events</title>
+<meta name="description" content="Documentação do Matterhorn: coleta de eventos web própria no Google Cloud, com Cloud Run e BigQuery.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,300..700&family=Roboto+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --bg: #ffffff;
+    --surface: #f8fafd;
+    --surface-2: #eef2f8;
+    --line: #dbe1ea;
+    --line-strong: #c3ccd8;
+    --ink: #1f1f1f;
+    --ink-2: #444746;
+    --ink-3: #676c73;
+    --accent: #0b57d0;
+    --accent-ink: #ffffff;
+    --accent-soft: #d3e3fd;
+    --accent-wash: #eef4ff;
+    --note-bg: #eef4ff;
+    --note-ink: #0b57d0;
+    --caution-bg: #fef7e0;
+    --caution-ink: #8a4b00;
+    --warning-bg: #fce8e6;
+    --warning-ink: #b3261e;
+    --success-bg: #e6f4ea;
+    --success-ink: #146c2e;
+    --tok-comment: #6a7079;
+    --tok-keyword: #8430ce;
+    --tok-string: #188038;
+    --tok-number: #a15c00;
+    --tok-function: #0b57d0;
+    --tok-property: #c5221f;
+    --tok-punct: #444746;
+    --diagram-box: #ffffff;
+    --shadow: 0 1px 2px rgba(31, 41, 55, .06), 0 1px 3px rgba(31, 41, 55, .08);
+    --font-sans: "Roboto Flex", Roboto, "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+    --font-mono: "Roboto Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    --header-h: 60px;
+    --tabs-h: 48px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #131314;
+      --surface: #1a1b1d;
+      --surface-2: #222428;
+      --line: #33363b;
+      --line-strong: #464a51;
+      --ink: #e3e3e3;
+      --ink-2: #c4c7c5;
+      --ink-3: #9aa0a6;
+      --accent: #a8c7fa;
+      --accent-ink: #062e6f;
+      --accent-soft: #28406a;
+      --accent-wash: #1b2536;
+      --note-bg: #1b2536;
+      --note-ink: #a8c7fa;
+      --caution-bg: #2c2517;
+      --caution-ink: #fdd663;
+      --warning-bg: #33201f;
+      --warning-ink: #f2b8b5;
+      --success-bg: #182a1f;
+      --success-ink: #81c995;
+      --tok-comment: #8e949b;
+      --tok-keyword: #d7aefb;
+      --tok-string: #81c995;
+      --tok-number: #fdd663;
+      --tok-function: #a8c7fa;
+      --tok-property: #f6aea9;
+      --tok-punct: #c4c7c5;
+      --diagram-box: #1f2124;
+      --shadow: 0 1px 2px rgba(0, 0, 0, .4);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #131314;
+    --surface: #1a1b1d;
+    --surface-2: #222428;
+    --line: #33363b;
+    --line-strong: #464a51;
+    --ink: #e3e3e3;
+    --ink-2: #c4c7c5;
+    --ink-3: #9aa0a6;
+    --accent: #a8c7fa;
+    --accent-ink: #062e6f;
+    --accent-soft: #28406a;
+    --accent-wash: #1b2536;
+    --note-bg: #1b2536;
+    --note-ink: #a8c7fa;
+    --caution-bg: #2c2517;
+    --caution-ink: #fdd663;
+    --warning-bg: #33201f;
+    --warning-ink: #f2b8b5;
+    --success-bg: #182a1f;
+    --success-ink: #81c995;
+    --tok-comment: #8e949b;
+    --tok-keyword: #d7aefb;
+    --tok-string: #81c995;
+    --tok-number: #fdd663;
+    --tok-function: #a8c7fa;
+    --tok-property: #f6aea9;
+    --tok-punct: #c4c7c5;
+    --diagram-box: #1f2124;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .4);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html { scroll-padding-top: calc(var(--header-h) + var(--tabs-h) + 16px); }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-size: 16px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  a { color: var(--accent); text-underline-offset: 3px; }
+  a:hover { text-decoration-thickness: 2px; }
+
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+
+  /* Cabeçalho e abas */
+
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: var(--bg);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .topbar-inner,
+  .tabs-inner,
+  .layout,
+  .footer-inner {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding-inline: 24px;
+  }
+
+  .topbar-inner {
+    height: var(--header-h);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--ink);
+    text-decoration: none;
+    font-size: 1.25rem;
+    font-weight: 500;
+    letter-spacing: -.01em;
+  }
+
+  .brand svg { width: 28px; height: 28px; color: var(--accent); flex: none; }
+
+  .version {
+    font-size: .75rem;
+    font-weight: 500;
+    color: var(--ink-2);
+    border: 1px solid var(--line-strong);
+    border-radius: 999px;
+    padding: 1px 8px;
+    letter-spacing: .02em;
+  }
+
+  .topbar-meta {
+    margin-left: auto;
+    font-size: .8125rem;
+    color: var(--ink-3);
+  }
+
+  .tabs-inner {
+    display: flex;
+    gap: 4px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .tabs-inner::-webkit-scrollbar { display: none; }
+
+  .tab {
+    appearance: none;
+    background: none;
+    border: 0;
+    border-bottom: 3px solid transparent;
+    color: var(--ink-2);
+    font: inherit;
+    font-size: .9375rem;
+    font-weight: 500;
+    height: var(--tabs-h);
+    padding: 3px 14px 0;
+    white-space: nowrap;
+    cursor: pointer;
+    border-radius: 6px 6px 0 0;
+  }
+
+  .tab:hover { background: var(--accent-wash); color: var(--ink); }
+
+  .tab[aria-selected="true"] {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+
+  /* Estrutura da página */
+
+  .layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 220px;
+    gap: 64px;
+    padding-block: 40px 72px;
+  }
+
+  .panel { min-width: 0; max-width: 780px; }
+
+  .toc {
+    position: sticky;
+    top: calc(var(--header-h) + var(--tabs-h) + 32px);
+    align-self: start;
+    max-height: calc(100vh - var(--header-h) - var(--tabs-h) - 64px);
+    overflow-y: auto;
+    font-size: .8125rem;
+  }
+
+  .toc-title {
+    margin: 0 0 10px;
+    font-size: .6875rem;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+
+  .toc ol { list-style: none; margin: 0; padding: 0; border-left: 1px solid var(--line); }
+
+  .toc a {
+    display: block;
+    padding: 5px 0 5px 14px;
+    margin-left: -1px;
+    border-left: 2px solid transparent;
+    color: var(--ink-2);
+    text-decoration: none;
+    line-height: 1.4;
+  }
+
+  .toc a:hover { color: var(--ink); }
+  .toc a[aria-current="true"] { color: var(--accent); border-left-color: var(--accent); font-weight: 500; }
+
+  @media (max-width: 1040px) {
+    .layout { grid-template-columns: minmax(0, 1fr); }
+    .toc { display: none; }
+    .panel { max-width: none; }
+  }
+
+  @media (max-width: 640px) {
+    .topbar-inner, .tabs-inner, .layout, .footer-inner { padding-inline: 16px; }
+    .topbar-meta { display: none; }
+    .layout { padding-block: 28px 56px; }
+  }
+
+  /* Tipografia do conteúdo */
+
+  .eyebrow {
+    margin: 0 0 8px;
+    font-size: .75rem;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+
+  .panel h1 {
+    margin: 0 0 12px;
+    font-size: clamp(1.75rem, 1.4rem + 1.2vw, 2.25rem);
+    font-weight: 450;
+    font-variation-settings: "opsz" 48;
+    line-height: 1.2;
+    letter-spacing: -.015em;
+    text-wrap: balance;
+  }
+
+  .lede {
+    margin: 0 0 32px;
+    font-size: 1.125rem;
+    line-height: 1.6;
+    color: var(--ink-2);
+    max-width: 68ch;
+  }
+
+  .panel h2 {
+    margin: 48px 0 12px;
+    font-size: 1.5rem;
+    font-weight: 500;
+    font-variation-settings: "opsz" 32;
+    line-height: 1.3;
+    letter-spacing: -.01em;
+    text-wrap: balance;
+  }
+
+  .panel h3 {
+    margin: 28px 0 8px;
+    font-size: 1.125rem;
+    font-weight: 600;
+    line-height: 1.4;
+  }
+
+  .panel p, .panel li { max-width: 72ch; }
+  .panel p { margin: 0 0 16px; }
+  .panel ul, .panel ol { margin: 0 0 16px; padding-left: 22px; }
+  .panel li { margin-bottom: 6px; }
+  .panel li > p { margin-bottom: 8px; }
+
+  .panel :not(pre) > code {
+    font-family: var(--font-mono);
+    font-size: .875em;
+    background: var(--surface-2);
+    border-radius: 4px;
+    padding: 1px 5px;
+    overflow-wrap: anywhere;
+  }
+
+  kbd {
+    font-family: var(--font-mono);
+    font-size: .8125em;
+    border: 1px solid var(--line-strong);
+    border-bottom-width: 2px;
+    border-radius: 4px;
+    padding: 0 5px;
+    background: var(--surface);
+  }
+
+  hr { border: 0; border-top: 1px solid var(--line); margin: 40px 0; }
+
+  /* Blocos de código */
+
+  .code {
+    margin: 0 0 20px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--surface);
+    overflow: hidden;
+  }
+
+  .code-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 38px;
+    padding: 0 6px 0 14px;
+    border-bottom: 1px solid var(--line);
+    font-size: .75rem;
+    color: var(--ink-3);
+  }
+
+  .code-lang { font-weight: 500; letter-spacing: .04em; text-transform: uppercase; }
+  .code-file { font-family: var(--font-mono); text-transform: none; letter-spacing: 0; color: var(--ink-2); }
+
+  .copy {
+    margin-left: auto;
+    appearance: none;
+    border: 0;
+    background: none;
+    color: var(--ink-2);
+    font: inherit;
+    font-size: .75rem;
+    font-weight: 500;
+    padding: 5px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+
+  .copy:hover { background: var(--surface-2); color: var(--ink); }
+  .copy.is-done { color: var(--success-ink); }
+
+  .code pre {
+    margin: 0;
+    padding: 14px 16px 16px;
+    overflow-x: auto;
+    font-family: var(--font-mono);
+    font-size: .8125rem;
+    line-height: 1.7;
+    color: var(--ink);
+    tab-size: 2;
+  }
+
+  .code pre code { font-family: inherit; background: none; padding: 0; }
+
+  .token.comment, .token.prolog, .token.doctype, .token.cdata { color: var(--tok-comment); }
+  .token.keyword, .token.important, .token.atrule, .token.builtin { color: var(--tok-keyword); }
+  .token.string, .token.char, .token.attr-value, .token.regex, .token.url, .token.inserted { color: var(--tok-string); }
+  .token.number, .token.boolean, .token.constant, .token.symbol { color: var(--tok-number); }
+  .token.function, .token.class-name { color: var(--tok-function); }
+  .token.property, .token.attr-name, .token.tag, .token.selector, .token.variable, .token.parameter { color: var(--tok-property); }
+  .token.punctuation, .token.operator { color: var(--tok-punct); }
+
+  /* Abas dentro do conteúdo (variações de um mesmo exemplo) */
+
+  .ctabs { margin: 0 0 20px; }
+  .ctabs .code { margin: 0; border-top-left-radius: 0; border-top-right-radius: 0; }
+
+  .ctabs-list {
+    display: flex;
+    gap: 2px;
+    border: 1px solid var(--line);
+    border-bottom: 0;
+    border-radius: 10px 10px 0 0;
+    background: var(--surface-2);
+    padding: 4px 4px 0;
+    overflow-x: auto;
+  }
+
+  .ctab {
+    appearance: none;
+    border: 0;
+    background: none;
+    font: inherit;
+    font-size: .8125rem;
+    font-weight: 500;
+    color: var(--ink-2);
+    padding: 7px 12px;
+    border-radius: 7px 7px 0 0;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .ctab[aria-selected="true"] { background: var(--surface); color: var(--accent); }
+  .ctab-panel .code-head { border-top: 0; }
+
+  /* Avisos */
+
+  .callout {
+    display: grid;
+    grid-template-columns: 20px minmax(0, 1fr);
+    gap: 12px;
+    margin: 0 0 20px;
+    padding: 14px 16px;
+    border-radius: 10px;
+    background: var(--note-bg);
+  }
+
+  .callout svg { width: 20px; height: 20px; margin-top: 2px; color: var(--note-ink); }
+  .callout p { margin: 0; }
+  .callout p + p { margin-top: 8px; }
+  .callout strong:first-child { color: var(--note-ink); }
+
+  .callout.caution { background: var(--caution-bg); }
+  .callout.caution svg, .callout.caution strong:first-child { color: var(--caution-ink); }
+  .callout.warning { background: var(--warning-bg); }
+  .callout.warning svg, .callout.warning strong:first-child { color: var(--warning-ink); }
+  .callout.success { background: var(--success-bg); }
+  .callout.success svg, .callout.success strong:first-child { color: var(--success-ink); }
+
+  /* Tabelas */
+
+  .table-wrap {
+    margin: 0 0 24px;
+    overflow-x: auto;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+  }
+
+  table { width: 100%; border-collapse: collapse; font-size: .875rem; line-height: 1.5; }
+  th, td { text-align: left; vertical-align: top; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+  th { background: var(--surface); font-weight: 600; color: var(--ink-2); white-space: nowrap; }
+  tr:last-child td { border-bottom: 0; }
+  td code { white-space: nowrap; }
+  .num { font-variant-numeric: tabular-nums; }
+
+  /* Passos numerados */
+
+  .steps { list-style: none; counter-reset: step; margin: 8px 0 24px; padding: 0; }
+
+  .steps > li {
+    counter-increment: step;
+    position: relative;
+    padding: 0 0 12px 48px;
+    max-width: none;
+  }
+
+  .steps > li::before {
+    content: counter(step);
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 30px;
+    height: 30px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    background: var(--bg);
+    font-size: .875rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .steps > li::after {
+    content: "";
+    position: absolute;
+    left: 15px;
+    top: 36px;
+    bottom: 4px;
+    border-left: 1px solid var(--line);
+  }
+
+  .steps > li:last-child::after { display: none; }
+  .steps > li > h3 { margin-top: 2px; }
+
+  /* Figuras */
+
+  figure { margin: 8px 0 28px; }
+
+  .diagram {
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--surface);
+    padding: 20px 16px 12px;
+    overflow-x: auto;
+  }
+
+  .diagram svg { display: block; width: 100%; min-width: 620px; height: auto; color: var(--ink); }
+
+  figcaption { margin-top: 10px; font-size: .8125rem; color: var(--ink-3); max-width: 72ch; }
+
+  /* Pares lado a lado (antes/depois) */
+
+  .pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin: 0 0 20px; }
+  .pair .code { margin: 0; }
+  @media (max-width: 720px) { .pair { grid-template-columns: minmax(0, 1fr); } }
+
+  /* Lista de definições (componentes, arquivos) */
+
+  .defs { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 10px 20px; margin: 0 0 24px; }
+  .defs dt { font-family: var(--font-mono); font-size: .8125rem; padding-top: 3px; color: var(--ink); }
+  .defs dd { margin: 0; color: var(--ink-2); }
+  @media (max-width: 560px) { .defs { grid-template-columns: minmax(0, 1fr); gap: 2px 0; } .defs dd { margin-bottom: 10px; } }
+
+  .next { list-style: none; padding: 0; margin: 0; border-top: 1px solid var(--line); }
+  .next li { margin: 0; max-width: none; border-bottom: 1px solid var(--line); }
+  .next a { display: flex; justify-content: space-between; gap: 16px; padding: 14px 4px; text-decoration: none; color: var(--ink); }
+  .next a span { color: var(--ink-3); font-size: .875rem; }
+  .next a:hover strong { color: var(--accent); }
+
+  .footer { border-top: 1px solid var(--line); background: var(--surface); }
+  .footer-inner { display: flex; flex-wrap: wrap; gap: 8px 24px; padding-block: 20px; font-size: .8125rem; color: var(--ink-3); }
+
+  @media (prefers-reduced-motion: no-preference) {
+    html { scroll-behavior: smooth; }
+    .tab, .ctab, .copy, .toc a { transition: background-color .15s, color .15s, border-color .15s; }
+  }
+
+  @media print {
+    .topbar, .toc, .copy { display: none; }
+    .panel[hidden] { display: block !important; }
+    .layout { display: block; }
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="#visao-geral" data-tab-link>
+      <svg viewBox="0 0 32 32" aria-hidden="true">
+        <path d="M2 28 L13.2 7.5 L16 10.6 L18.1 4 L30 28 Z" fill="currentColor" opacity=".9"/>
+        <path d="M13.2 7.5 L16 10.6 L18.1 4 L21 10 L18.6 12.4 L16.4 11.6 L14.6 13.6 L11.3 11 Z" style="fill:var(--bg)" opacity=".85"/>
+      </svg>
+      Matterhorn
+    </a>
+    <span class="version">v1</span>
+    <span class="topbar-meta">Coleta de eventos no Google Cloud</span>
+  </div>
+  <nav class="tabs-inner" role="tablist" aria-label="Seções da documentação">
+    <button class="tab" role="tab" id="tab-visao-geral" aria-controls="visao-geral" aria-selected="true">Visão geral</button>
+    <button class="tab" role="tab" id="tab-implantacao" aria-controls="implantacao" aria-selected="false" tabindex="-1">Implantação</button>
+    <button class="tab" role="tab" id="tab-tracker" aria-controls="tracker" aria-selected="false" tabindex="-1">Tracker</button>
+    <button class="tab" role="tab" id="tab-consultas" aria-controls="consultas" aria-selected="false" tabindex="-1">Consultas</button>
+    <button class="tab" role="tab" id="tab-referencia" aria-controls="referencia" aria-selected="false" tabindex="-1">Referência</button>
+    <button class="tab" role="tab" id="tab-operacao" aria-controls="operacao" aria-selected="false" tabindex="-1">Operação</button>
+  </nav>
+</header>
+
+<div class="layout">
+  <main id="conteudo">
+<section class="panel" id="visao-geral" role="tabpanel" aria-labelledby="tab-visao-geral" tabindex="0">
+  <p class="eyebrow">Visão geral</p>
+  <h1>Matterhorn</h1>
+  <p class="lede">O Matterhorn registra o que acontece no seu site (visualizações de página, cliques, compras) e grava cada evento no BigQuery do seu projeto no Google Cloud. É a mesma ideia do GA4 ou do Mixpanel, mas os dados, o esquema e a conta são seus.</p>
+
+  <h2 id="vg-como-funciona">Como funciona</h2>
+  <p>São três peças. Um script no site monta o evento, um serviço no Cloud Run recebe e padroniza, e o BigQuery guarda. Toda a infraestrutura é criada pelo Terraform.</p>
+
+  <figure>
+    <div class="diagram">
+      <svg viewBox="0 0 800 280" role="img" aria-label="O site envia cada evento por POST para o serviço no Cloud Run, que grava no BigQuery por streaming. O Cloud Build publica a imagem no Artifact Registry, de onde o Cloud Run a executa. O Terraform cria o serviço, o dataset e a tabela." style="font-family:var(--font-sans)">
+        <defs>
+          <marker id="mh-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" style="fill:var(--accent)"/></marker>
+          <marker id="mh-arrow-muted" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" style="fill:var(--ink-3)"/></marker>
+        </defs>
+
+        <rect x="10" y="24" width="180" height="100" rx="10" style="fill:var(--diagram-box);stroke:var(--accent)" stroke-width="1.5"/>
+        <text x="26" y="52" font-size="15" font-weight="600" style="fill:var(--ink)">Site</text>
+        <text x="26" y="76" font-size="11.5" style="fill:var(--ink-2);font-family:var(--font-mono)">tracker/matterhorn.js</text>
+        <text x="26" y="104" font-size="12" style="fill:var(--ink-3)">page_view e eventos</text>
+
+        <rect x="310" y="24" width="180" height="100" rx="10" style="fill:var(--diagram-box);stroke:var(--accent)" stroke-width="1.5"/>
+        <text x="326" y="52" font-size="15" font-weight="600" style="fill:var(--ink)">Cloud Run</text>
+        <text x="326" y="76" font-size="11.5" style="fill:var(--ink-2);font-family:var(--font-mono)">backend/app.py</text>
+        <text x="326" y="104" font-size="12" style="fill:var(--ink-3)">tipa os event_params</text>
+
+        <rect x="610" y="24" width="180" height="100" rx="10" style="fill:var(--diagram-box);stroke:var(--accent)" stroke-width="1.5"/>
+        <text x="626" y="52" font-size="15" font-weight="600" style="fill:var(--ink)">BigQuery</text>
+        <text x="626" y="76" font-size="11.5" style="fill:var(--ink-2);font-family:var(--font-mono)">events_raw</text>
+        <text x="626" y="104" font-size="12" style="fill:var(--ink-3)">uma linha por evento</text>
+
+        <line x1="190" y1="74" x2="306" y2="74" style="stroke:var(--accent)" stroke-width="1.75" marker-end="url(#mh-arrow)"/>
+        <text x="248" y="64" font-size="12" text-anchor="middle" style="fill:var(--ink-2);font-family:var(--font-mono)">POST /mhc</text>
+        <text x="248" y="92" font-size="12" text-anchor="middle" style="fill:var(--ink-3)">JSON</text>
+
+        <line x1="490" y1="74" x2="606" y2="74" style="stroke:var(--accent)" stroke-width="1.75" marker-end="url(#mh-arrow)"/>
+        <text x="548" y="64" font-size="11" text-anchor="middle" style="fill:var(--ink-2);font-family:var(--font-mono)">insert_rows_json</text>
+        <text x="548" y="92" font-size="12" text-anchor="middle" style="fill:var(--ink-3)">streaming</text>
+
+        <rect x="10" y="200" width="180" height="60" rx="10" style="fill:var(--diagram-box);stroke:var(--line-strong)"/>
+        <text x="26" y="224" font-size="13.5" font-weight="600" style="fill:var(--ink)">Cloud Build</text>
+        <text x="26" y="246" font-size="11" style="fill:var(--ink-3);font-family:var(--font-mono)">gcloud builds submit</text>
+
+        <rect x="310" y="200" width="180" height="60" rx="10" style="fill:var(--diagram-box);stroke:var(--line-strong)"/>
+        <text x="326" y="224" font-size="13.5" font-weight="600" style="fill:var(--ink)">Artifact Registry</text>
+        <text x="326" y="246" font-size="11" style="fill:var(--ink-3);font-family:var(--font-mono)">matterhorn-api:vN</text>
+
+        <rect x="610" y="200" width="180" height="60" rx="10" style="fill:var(--diagram-box);stroke:var(--line-strong)"/>
+        <text x="626" y="224" font-size="13.5" font-weight="600" style="fill:var(--ink)">Terraform</text>
+        <text x="626" y="246" font-size="11" style="fill:var(--ink-3);font-family:var(--font-mono)">infra/*.tf</text>
+
+        <line x1="190" y1="230" x2="306" y2="230" style="stroke:var(--ink-3)" stroke-width="1.25" marker-end="url(#mh-arrow-muted)"/>
+        <text x="248" y="221" font-size="12" text-anchor="middle" style="fill:var(--ink-3)">publica</text>
+
+        <line x1="400" y1="200" x2="400" y2="128" style="stroke:var(--ink-3)" stroke-width="1.25" marker-end="url(#mh-arrow-muted)"/>
+        <text x="408" y="168" font-size="12" style="fill:var(--ink-3)">executa a imagem</text>
+
+        <line x1="700" y1="200" x2="700" y2="128" style="stroke:var(--ink-3)" stroke-width="1.25" stroke-dasharray="4 4" marker-end="url(#mh-arrow-muted)"/>
+        <text x="708" y="168" font-size="12" style="fill:var(--ink-3)">cria</text>
+
+        <line x1="628" y1="200" x2="494" y2="128" style="stroke:var(--ink-3)" stroke-width="1.25" stroke-dasharray="4 4" marker-end="url(#mh-arrow-muted)"/>
+        <text x="572" y="150" font-size="12" text-anchor="end" style="fill:var(--ink-3)">cria</text>
+      </svg>
+    </div>
+    <figcaption>Em azul, o caminho de cada evento. Em cinza, como a imagem chega ao Cloud Run; o tracejado é o que o Terraform cria. A service account e as permissões também saem do Terraform e não aparecem no desenho.</figcaption>
+  </figure>
+
+  <ol>
+    <li>O <code>matterhorn.js</code> junta o nome do evento, os parâmetros e o contexto da página (URL, título, navegador, dispositivo, idioma) e faz um <code>POST</code> em <code>/mhc</code>.</li>
+    <li>O <code>app.py</code> valida o JSON, converte <code>event_params</code> para o formato do GA4 e insere a linha no BigQuery.</li>
+    <li>A linha pode ser consultada poucos segundos depois.</li>
+  </ol>
+
+  <h2 id="vg-event-params">O formato de event_params</h2>
+  <p>No navegador, os parâmetros são um objeto comum. No BigQuery, viram uma lista de pares chave e valor, com o valor na coluna do seu tipo. É exatamente o layout do export do GA4.</p>
+
+  <div class="pair">
+    <div class="code">
+      <div class="code-head"><span class="code-lang">Enviado pelo site</span><button class="copy" type="button">Copiar</button></div>
+<pre><code class="language-json">{
+  "event_name": "add_to_cart",
+  "event_params": {
+    "item_id": "SKU-123",
+    "quantity": 2,
+    "price": 49.9,
+    "gift": false
+  }
+}</code></pre>
+    </div>
+    <div class="code">
+      <div class="code-head"><span class="code-lang">Gravado no BigQuery</span><button class="copy" type="button">Copiar</button></div>
+<pre><code class="language-json">"event_params": [
+  { "key": "item_id",  "value": { "string_value": "SKU-123" } },
+  { "key": "quantity", "value": { "int_value": 2 } },
+  { "key": "price",    "value": { "double_value": 49.9 } },
+  { "key": "gift",     "value": { "string_value": "false" } }
+]</code></pre>
+    </div>
+  </div>
+
+  <p>A vantagem de copiar o GA4: quem já consulta o export do GA4 reaproveita as mesmas consultas com <code>UNNEST</code>, e as duas fontes podem ser cruzadas na mesma análise.</p>
+
+  <h2 id="vg-componentes">Componentes</h2>
+  <dl class="defs">
+    <dt>tracker/matterhorn.js</dt>
+    <dd>Script instalado no site. Envia um <code>page_view</code> ao carregar e expõe <code>matterhorn_event()</code> para o resto.</dd>
+    <dt>backend/app.py</dt>
+    <dd>Serviço Flask com uma rota, <code>POST /mhc</code>. Roda no Cloud Run com gunicorn.</dd>
+    <dt>backend/Dockerfile</dt>
+    <dd>Imagem Python 3.10 slim. O build acontece no Cloud Build, sem Docker local.</dd>
+    <dt>infra/</dt>
+    <dd>Terraform do dataset, da tabela, da service account, do serviço e das permissões.</dd>
+    <dt>infra/schemas/events_raw.json</dt>
+    <dd>Esquema da tabela, separado do código para ser lido e revisado com facilidade.</dd>
+  </dl>
+
+  <h2 id="vg-escopo">O que cabe na v1</h2>
+  <p>Esta primeira versão resolve a coleta. O resto fica para depois, de propósito.</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Incluído</th><th>Fora, por enquanto</th></tr></thead>
+      <tbody>
+        <tr><td><code>page_view</code> automático e eventos personalizados</td><td>Usuários e sessões: não há cookie nem ID de visitante</td></tr>
+        <tr><td>Gravação em tempo real no BigQuery</td><td>Painéis prontos. Use SQL ou o Looker Studio</td></tr>
+        <tr><td>Infraestrutura inteira em Terraform</td><td>Filtro de bots e de tráfego interno</td></tr>
+        <tr><td>Esquema compatível com o export do GA4</td><td>Gestão de consentimento, que fica a cargo do site</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout caution">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+    <div><p><strong>LGPD:</strong> o tracker não grava cookies nem identificadores, mas registra URL, idioma e dados do navegador. Se o site pede consentimento para analytics, carregue o script só depois do aceite e não mande dados pessoais nos parâmetros.</p></div>
+  </div>
+
+  <h2 id="vg-proximos">Próximos passos</h2>
+  <ul class="next">
+    <li><a href="#implantacao"><strong>Implantar o Matterhorn</strong><span>Do projeto vazio ao primeiro evento</span></a></li>
+    <li><a href="#tracker"><strong>Enviar eventos</strong><span>Instalação no site e no GTM</span></a></li>
+    <li><a href="#consultas"><strong>Consultar os dados</strong><span>SQL pronto para o BigQuery</span></a></li>
+  </ul>
+</section>
+<section class="panel" id="implantacao" role="tabpanel" aria-labelledby="tab-implantacao" tabindex="0" hidden>
+  <p class="eyebrow">Guia</p>
+  <h1>Implantar o Matterhorn</h1>
+  <p class="lede">Do projeto vazio no Google Cloud até o primeiro evento no BigQuery. Os comandos são para Ubuntu; no Windows, eles rodam dentro do WSL2.</p>
+
+  <h2 id="impl-antes">Antes de começar</h2>
+  <ul>
+    <li>Um projeto no Google Cloud com faturamento ativo.</li>
+    <li>Papel de <strong>Owner</strong> no projeto, ou permissão para criar service accounts e conceder papéis no IAM. <strong>Editor</strong> não basta para a parte de IAM.</li>
+    <li>Uma cópia deste repositório na sua máquina.</li>
+  </ul>
+
+  <div class="callout">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
+    <div><p><strong>Observação:</strong> em todos os comandos, troque <code>SEU_PROJETO</code> pelo <em>ID</em> do projeto, como <code>meu-projeto-123</code>. O ID aparece no seletor de projetos do console e é diferente do nome.</p></div>
+  </div>
+
+  <h2 id="impl-ambiente">1. Preparar o ambiente</h2>
+  <p>No Windows, tudo roda no Subsistema Windows para Linux. Assim as ferramentas se comportam igual a um servidor Linux e não conflitam com o que já está instalado.</p>
+  <ol class="steps">
+    <li>
+      <h3>Instale o WSL2</h3>
+      <p>Abra o PowerShell como administrador e execute:</p>
+      <div class="code">
+        <div class="code-head"><span class="code-lang">PowerShell</span><button class="copy" type="button">Copiar</button></div>
+<pre><code class="language-bash">wsl --install</code></pre>
+      </div>
+      <p>Reinicie o computador se for pedido. Depois abra o <strong>Ubuntu</strong> pelo menu Iniciar e crie seu usuário e senha.</p>
+    </li>
+    <li>
+      <h3>Atualize o sistema e instale o Python</h3>
+      <p>O Python só é necessário para rodar o backend localmente. O build de produção acontece no Cloud Build.</p>
+      <div class="code">
+        <div class="code-head"><span class="code-lang">bash</span><button class="copy" type="button">Copiar</button></div>
+<pre><code class="language-bash">sudo apt update &amp;&amp; sudo apt upgrade -y
+sudo apt install python3 python3-pip python3-venv -y</code></pre>
+      </div>
+    </li>
+  </ol>
+
+  <h2 id="impl-ferramentas">2. Instalar gcloud e Terraform</h2>
+  <ol class="steps">
+    <li>
+      <h3>Google Cloud CLI</h3>
+      <div class="code">
+        <div class="code-head"><span class="code-lang">bash</span><button class="copy" type="button">Copiar</button></div>
+<pre><code class="language-bash">sudo apt-get install apt-transport-https ca-certificates gnupg curl -y
+curl https://packages.cloud.google.com/apt/doc/apt-key.gpg \
+  | sudo gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg
+echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" \
+  | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
+sudo apt-get update &amp;&amp; sudo apt-get install google-cloud-cli -y</code></pre>
+      </div>
+    </li>
+    <li>
+      <h3>Terraform</h3>
+      <div class="code">
+        <div class="code-head"><span class="code-lang">bash</span><button class="copy" type="button">Copiar</button></div>
+<pre><code class="language-bash">wget -O- https://apt.releases.hashicorp.com/gpg \
+  | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" \
+  | sudo tee /etc/apt/sources.list.d/hashicorp.list
+sudo apt-get update &amp;&amp; sudo apt-get install terraform -y</code></pre>
+      </div>
+    </li>
+    <li>
+      <h3>Confira as versões</h3>
+      <div class="code">
+        <div class="code-head"><span class="code-lang">bash</span><button class="copy" type="button">Copiar</button></div>
+<pre><code class="language-bash">gcloud --version
+terraform version   # 1.5 ou mais novo</code></pre>
+      </div>
+    </li>
+  </ol>
+
+  <h2 id="impl-projeto">3. Configurar o projeto</h2>
+  <ol class="steps">
+    <li>
+      <h3>Autentique</h3>
+      <p>O primeiro login é o do <code>gcloud</code>. O segundo gera as credenciais que o Terraform usa.</p>
+      <div class="code">
+        <div class="code-head"><span class="code-lang">bash</span><button class="copy" type="button">Copiar</button></div>
+<pre><code class="language-bash">gcloud auth login
+gcloud auth application-default login
+gcloud config set project SEU_PROJETO</code></pre>
+      </div>
+    </li>
+    <li>
+      <h3>Habilite as APIs</h3>
+      <div class="code">
+        <div class="code-head"><span class="code-lang">bash</span><button class="copy" type="button">Copiar</button></div>
+<pre><code class="language-bash">gcloud services enable run.googleapis.com artifactregistry.googleapis.com \
+  cloudbuild.googleapis.com iam.googleapis.com bigquery.googleapis.com</code></pre>
+      </div>
+    </li>
+    <li>
+      <h3>Crie o repositório de imagens</h3>
+      <div class="code">
+        <div class="code-head"><span class="code-lang">bash</span><button class="copy" type="button">Copiar</button></div>
+<pre><code class="language-bash">gcloud artifacts repositories create matterhorn-repo \
+  --repository-format=docker --location=us-central1</code></pre>
+      </div>
+    </li>
+  </ol>
+
+  <h2 id="impl-imagem">4. Gerar a primeira imagem</h2>
+  <p>Na raiz do repositório, envie a pasta <code>backend/</code> para o Cloud Build. Ele executa o <code>Dockerfile</code> e publica a imagem no Artifact Registry.</p>
+  <div class="code">
+    <div class="code-head"><span class="code-lang">bash</span><button class="copy" type="button">Copiar</button></div>
+<pre><code class="language-bash">gcloud builds submit backend \
+  --tag us-central1-docker.pkg.dev/SEU_PROJETO/matterhorn-repo/matterhorn-api:v1</code></pre>
+  </div>
+  <p>Use tags crescentes (<code>v1</code>, <code>v2</code>, <code>v3</code>). A tag é o que diz ao Terraform qual versão deve estar no ar.</p>
+
+  <h2 id="impl-terraform">5. Criar a infraestrutura</h2>
+  <ol class="steps">
+    <li>
+      <h3>Preencha as variáveis</h3>
+      <div class="code">
+        <div class="code-head"><span class="code-lang">bash</span><button class="copy" type="button">Copiar</button></div>
+<pre><code class="language-bash">cd infra
+cp terraform.tfvars.example terraform.tfvars</code></pre>
+      </div>
+      <p>Só duas são obrigatórias. As demais têm padrão e estão descritas na <a href="#ref-tf-vars">referência</a>.</p>
+      <div class="code">
+        <div class="code-head"><span class="code-lang">hcl</span><span class="code-file">infra/terraform.tfvars</span><button class="copy" type="button">Copiar</button></div>
+<pre><code class="language-hcl">project_id = "SEU_PROJETO"
+image_tag  = "v1"</code></pre>
+      </div>
+    </li>
+    <li>
+      <h3>Revise e aplique</h3>
+      <div class="code">
+        <div class="code-head"><span class="code-lang">bash</span><button class="copy" type="button">Copiar</button></div>
+<pre><code class="language-bash">terraform init
+terraform plan
+terraform apply</code></pre>
+      </div>
+      <p>O <code>plan</code> deve listar 6 recursos para criar. Confirme o <code>apply</code> com <kbd>yes</kbd>. No fim aparecem os outputs:</p>
+      <div class="code">
+        <div class="code-head"><span class="code-lang">Saída</span><button class="copy" type="button">Copiar</button></div>
+<pre><code>cloud_run_url         = "https://matterhorn-backend-xxxxxxxxxx-uc.a.run.app"
+collector_endpoint    = "https://matterhorn-backend-xxxxxxxxxx-uc.a.run.app/mhc"
+events_table          = "SEU_PROJETO.matterhorn_dataset.events_raw"
+service_account_email = "matterhorn-cr-sa@SEU_PROJETO.iam.gserviceaccount.com"</code></pre>
+      </div>
+    </li>
+  </ol>
+
+  <div class="callout caution">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+    <div><p><strong>Guarde o terraform.tfstate.</strong> Ele fica em <code>infra/</code>, fora do Git, e é por ele que o Terraform sabe o que já existe. Sem o arquivo, o próximo <code>apply</code> tenta criar tudo de novo e falha com "already exists".</p></div>
+  </div>
+
+  <h2 id="impl-tracker">6. Instalar o tracker</h2>
+  <p>Abra <code>tracker/matterhorn.js</code> e coloque o <code>collector_endpoint</code> no <code>ENDPOINT</code>:</p>
+  <div class="code">
+    <div class="code-head"><span class="code-lang">JavaScript</span><span class="code-file">tracker/matterhorn.js</span><button class="copy" type="button">Copiar</button></div>
+<pre><code class="language-javascript">var ENDPOINT = "https://matterhorn-backend-xxxxxxxxxx-uc.a.run.app/mhc";</code></pre>
+  </div>
+  <p>Depois carregue o script em todas as páginas. As opções (HTML direto ou Google Tag Manager) estão na aba <a href="#tr-instalar">Tracker</a>.</p>
+
+  <h2 id="impl-verificar">7. Verificar</h2>
+  <p>Abra o site em uma aba anônima e rode no BigQuery:</p>
+  <div class="code">
+    <div class="code-head"><span class="code-lang">SQL</span><button class="copy" type="button">Copiar</button></div>
+<pre><code class="language-sql">SELECT event_name, url, browser, device, TIMESTAMP_MILLIS(timestamp) AS quando
+FROM `SEU_PROJETO.matterhorn_dataset.events_raw`
+ORDER BY timestamp DESC
+LIMIT 10;</code></pre>
+  </div>
+  <div class="callout success">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+    <div><p><strong>Pronto:</strong> se o seu <code>page_view</code> aparece no resultado, a coleta está funcionando. Se não aparece, veja <a href="#op-problemas">Solução de problemas</a>.</p></div>
+  </div>
+</section>
+<section class="panel" id="tracker" role="tabpanel" aria-labelledby="tab-tracker" tabindex="0" hidden>
+  <p class="eyebrow">Guia</p>
+  <h1>Enviar eventos com o tracker</h1>
+  <p class="lede">O <code>matterhorn.js</code> tem cerca de 100 linhas, não depende de nenhuma biblioteca e é escrito em ES5, então roda em qualquer navegador e dentro do Google Tag Manager sem ajuste.</p>
+
+  <h2 id="tr-instalar">Instalar</h2>
+  <p>Com o <code>ENDPOINT</code> preenchido, escolha uma das formas:</p>
+  <div class="ctabs">
+    <div class="ctabs-list" role="tablist" aria-label="Forma de instalação">
+      <button class="ctab" type="button" role="tab" aria-selected="true">HTML</button>
+      <button class="ctab" type="button" role="tab" aria-selected="false">Google Tag Manager</button>
+    </div>
+    <div class="ctab-panel">
+      <div class="code">
+        <div class="code-head"><span class="code-lang">HTML</span><button class="copy" type="button">Copiar</button></div>
+<pre><code class="language-markup">&lt;!-- No &lt;head&gt; de todas as páginas --&gt;
+&lt;script src="/js/matterhorn.js" defer&gt;&lt;/script&gt;</code></pre>
+      </div>
+    </div>
+    <div class="ctab-panel" hidden>
+      <div class="code">
+        <div class="code-head"><span class="code-lang">Tag de HTML personalizado</span><button class="copy" type="button">Copiar</button></div>
+<pre><code class="language-markup">&lt;script&gt;
+  /* cole aqui o conteúdo inteiro de tracker/matterhorn.js */
+&lt;/script&gt;</code></pre>
+      </div>
+    </div>
+  </div>
+  <p>No GTM, crie uma tag do tipo <strong>HTML personalizado</strong> com o acionador <strong>All Pages</strong> e publique o contêiner.</p>
+
+  <h2 id="tr-configurar">Configurar</h2>
+  <p>As duas constantes ficam no topo do arquivo.</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Constante</th><th>Padrão</th><th>Para que serve</th></tr></thead>
+      <tbody>
+        <tr><td><code>ENDPOINT</code></td><td>URL de exemplo</td><td>Endereço de coleta, terminado em <code>/mhc</code>. Vem do output <code>collector_endpoint</code>.</td></tr>
+        <tr><td><code>DEBUG</code></td><td><code>false</code></td><td>Com <code>true</code>, escreve no console cada evento enviado e o resultado.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 id="tr-eventos">Eventos personalizados</h2>
+  <p>O <code>page_view</code> sai sozinho quando o script carrega. Para o resto, chame <code>matterhorn_event(nome, params)</code>:</p>
+  <div class="code">
+    <div class="code-head"><span class="code-lang">JavaScript</span><button class="copy" type="button">Copiar</button></div>
+<pre><code class="language-javascript">// Clique em um botão
+document.querySelector("#assinar").addEventListener("click", function () {
+  matterhorn_event("click", { button_id: "assinar", section: "hero" });
+});
+
+// Item adicionado ao carrinho
+matterhorn_event("add_to_cart", { item_id: "SKU-123", quantity: 2, price: 49.9, currency: "BRL" });
+
+// Compra concluída
+matterhorn_event("purchase", { transaction_id: "T-9087", value: 199.8, currency: "BRL" });</code></pre>
+  </div>
+  <p>Use nomes em <code>snake_case</code> e, quando existir, o mesmo nome do evento recomendado do GA4 (<code>sign_up</code>, <code>add_to_cart</code>, <code>purchase</code>). Assim as consultas servem para as duas bases.</p>
+
+  <h2 id="tr-campos">Campos coletados automaticamente</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Campo</th><th>Origem</th><th>Exemplo</th></tr></thead>
+      <tbody>
+        <tr><td><code>application_type</code></td><td>Fixo</td><td><code>web</code></td></tr>
+        <tr><td><code>url</code></td><td><code>window.location.href</code></td><td><code>https://loja.com/p/42?utm_source=ig</code></td></tr>
+        <tr><td><code>hostname</code></td><td><code>window.location.hostname</code></td><td><code>loja.com</code></td></tr>
+        <tr><td><code>page_title</code></td><td><code>document.title</code></td><td><code>Tênis Runner | Loja</code></td></tr>
+        <tr><td><code>timestamp</code></td><td>Relógio do visitante, em ms</td><td class="num"><code>1789080479736</code></td></tr>
+        <tr><td><code>os</code></td><td><code>navigator.platform</code></td><td><code>Win32</code>, <code>MacIntel</code>, <code>iPhone</code></td></tr>
+        <tr><td><code>browser</code></td><td>User agent</td><td><code>Google Chrome</code>, <code>Samsung Internet</code></td></tr>
+        <tr><td><code>device</code></td><td>User agent e plataforma</td><td><code>Desktop</code>, <code>Mobile</code>, <code>Tablet</code>, <code>Smart TV</code></td></tr>
+        <tr><td><code>language</code></td><td><code>navigator.language</code></td><td><code>pt-BR</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>Navegadores e dispositivos que o script não reconhece aparecem como <code>(other)</code>.</p>
+
+  <h2 id="tr-tipos">Tipos dos parâmetros</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Valor em JavaScript</th><th>Coluna no BigQuery</th><th>Exemplo gravado</th></tr></thead>
+      <tbody>
+        <tr><td>Número inteiro</td><td><code>value.int_value</code></td><td class="num"><code>2</code></td></tr>
+        <tr><td>Número com casas decimais</td><td><code>value.double_value</code></td><td class="num"><code>49.9</code></td></tr>
+        <tr><td>Texto</td><td><code>value.string_value</code></td><td><code>SKU-123</code></td></tr>
+        <tr><td>Booleano</td><td><code>value.string_value</code></td><td><code>true</code> ou <code>false</code>, como no GA4</td></tr>
+        <tr><td>Objeto ou lista</td><td><code>value.string_value</code></td><td>JSON: <code>{"cor":"azul"}</code></td></tr>
+        <tr><td><code>null</code></td><td>nenhuma</td><td>as três colunas ficam nulas</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="callout caution">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+    <div><p><strong>Preços redondos viram inteiro.</strong> O JavaScript não diferencia <code>50</code> de <code>50.0</code>, então <code>price: 50.0</code> chega em <code>int_value</code> e <code>price: 49.9</code> em <code>double_value</code>. Ao consultar valores, leia as duas colunas com <code>COALESCE</code> (veja <a href="#sql-numeros">Valores numéricos</a>).</p></div>
+  </div>
+
+  <h2 id="tr-depurar">Depurar</h2>
+  <ol>
+    <li>Troque <code>DEBUG</code> para <code>true</code> e recarregue a página. O console mostra <code>[matterhorn] enviando</code> e, em seguida, <code>gravado</code> ou <code>falhou</code>.</li>
+    <li>Na aba <strong>Network</strong> do DevTools, filtre por <code>mhc</code>. Cada evento gera um <code>POST</code>, às vezes precedido de um <code>OPTIONS</code> (o preflight do CORS).</li>
+    <li>Compare o status com a <a href="#ref-respostas">tabela de respostas</a>.</li>
+  </ol>
+</section>
+<section class="panel" id="consultas" role="tabpanel" aria-labelledby="tab-consultas" tabindex="0" hidden>
+  <p class="eyebrow">Exemplos</p>
+  <h1>Consultar os dados no BigQuery</h1>
+  <p class="lede">Todos os eventos ficam em uma única tabela. As consultas abaixo cobrem o que se costuma olhar primeiro. Troque <code>SEU_PROJETO</code> pelo ID do projeto ou use o output <code>events_table</code> do Terraform.</p>
+
+  <h2 id="sql-dia">Eventos por dia</h2>
+  <p>O <code>timestamp</code> é epoch em milissegundos. O fuso vai no <code>DATE()</code>; sem ele, o dia vira em UTC.</p>
+  <div class="code">
+    <div class="code-head"><span class="code-lang">SQL</span><button class="copy" type="button">Copiar</button></div>
+<pre><code class="language-sql">SELECT
+  DATE(TIMESTAMP_MILLIS(timestamp), 'America/Sao_Paulo') AS dia,
+  event_name,
+  COUNT(*) AS eventos
+FROM `SEU_PROJETO.matterhorn_dataset.events_raw`
+GROUP BY dia, event_name
+ORDER BY dia DESC, eventos DESC;</code></pre>
+  </div>
+
+  <h2 id="sql-paginas">Páginas mais vistas</h2>
+  <div class="code">
+    <div class="code-head"><span class="code-lang">SQL</span><button class="copy" type="button">Copiar</button></div>
+<pre><code class="language-sql">SELECT
+  page_title,
+  REGEXP_REPLACE(url, r'[?#].*$', '') AS pagina,
+  COUNT(*) AS page_views
+FROM `SEU_PROJETO.matterhorn_dataset.events_raw`
+WHERE event_name = 'page_view'
+  AND TIMESTAMP_MILLIS(timestamp) &gt;= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 7 DAY)
+GROUP BY page_title, pagina
+ORDER BY page_views DESC
+LIMIT 20;</code></pre>
+  </div>
+
+  <h2 id="sql-params">Lendo event_params</h2>
+  <p>Cada parâmetro é lido com uma subconsulta sobre <code>UNNEST(event_params)</code>, igual ao GA4:</p>
+  <div class="code">
+    <div class="code-head"><span class="code-lang">SQL</span><button class="copy" type="button">Copiar</button></div>
+<pre><code class="language-sql">SELECT
+  (SELECT value.string_value FROM UNNEST(event_params) WHERE key = 'button_id') AS button_id,
+  (SELECT value.string_value FROM UNNEST(event_params) WHERE key = 'section') AS secao,
+  COUNT(*) AS cliques
+FROM `SEU_PROJETO.matterhorn_dataset.events_raw`
+WHERE event_name = 'click'
+GROUP BY button_id, secao
+ORDER BY cliques DESC;</code></pre>
+  </div>
+  <p>Quando a consulta lê muitos parâmetros, funções temporárias deixam o SQL mais curto:</p>
+  <div class="code">
+    <div class="code-head"><span class="code-lang">SQL</span><button class="copy" type="button">Copiar</button></div>
+<pre><code class="language-sql">CREATE TEMP FUNCTION param_str(params ANY TYPE, nome STRING) AS (
+  (SELECT value.string_value FROM UNNEST(params) WHERE key = nome)
+);
+
+SELECT
+  param_str(event_params, 'item_id') AS item_id,
+  COUNT(*) AS adicoes
+FROM `SEU_PROJETO.matterhorn_dataset.events_raw`
+WHERE event_name = 'add_to_cart'
+GROUP BY item_id
+ORDER BY adicoes DESC;</code></pre>
+  </div>
+
+  <h2 id="sql-numeros">Valores numéricos</h2>
+  <p>Um número pode estar em <code>int_value</code> ou em <code>double_value</code>, dependendo de ter casas decimais. Some as duas:</p>
+  <div class="code">
+    <div class="code-head"><span class="code-lang">SQL</span><button class="copy" type="button">Copiar</button></div>
+<pre><code class="language-sql">SELECT
+  DATE(TIMESTAMP_MILLIS(timestamp), 'America/Sao_Paulo') AS dia,
+  COUNT(*) AS pedidos,
+  ROUND(SUM((
+    SELECT COALESCE(value.double_value, value.int_value)
+    FROM UNNEST(event_params) WHERE key = 'value'
+  )), 2) AS receita
+FROM `SEU_PROJETO.matterhorn_dataset.events_raw`
+WHERE event_name = 'purchase'
+GROUP BY dia
+ORDER BY dia DESC;</code></pre>
+  </div>
+
+  <h2 id="sql-tecnologia">Navegadores e dispositivos</h2>
+  <div class="code">
+    <div class="code-head"><span class="code-lang">SQL</span><button class="copy" type="button">Copiar</button></div>
+<pre><code class="language-sql">SELECT
+  device,
+  browser,
+  COUNT(*) AS page_views,
+  ROUND(100 * COUNT(*) / SUM(COUNT(*)) OVER (), 1) AS pct
+FROM `SEU_PROJETO.matterhorn_dataset.events_raw`
+WHERE event_name = 'page_view'
+GROUP BY device, browser
+ORDER BY page_views DESC;</code></pre>
+  </div>
+
+  <h2 id="sql-custo">Custo das consultas</h2>
+  <p>A tabela não é particionada, então toda consulta lê as colunas citadas em todas as linhas, mesmo com filtro de data. Com pouco volume isso não pesa: o nível gratuito do BigQuery cobre 1 TiB de consultas por mês.</p>
+  <ul>
+    <li>Selecione só as colunas necessárias. <code>SELECT *</code> lê a tabela inteira.</li>
+    <li>Confira a estimativa de bytes no editor do BigQuery antes de rodar.</li>
+    <li>Para painéis que rodam toda hora, grave o resultado numa tabela agregada por dia.</li>
+  </ul>
+</section>
+<section class="panel" id="referencia" role="tabpanel" aria-labelledby="tab-referencia" tabindex="0" hidden>
+  <p class="eyebrow">Referência</p>
+  <h1>Referência</h1>
+  <p class="lede">API de coleta, esquema da tabela e todas as variáveis do backend e do Terraform.</p>
+
+  <h2 id="ref-api">POST /mhc</h2>
+  <p>Recebe um evento por requisição e grava uma linha em <code>events_raw</code>. Aceita qualquer origem (CORS aberto) e não exige autenticação.</p>
+  <div class="code">
+    <div class="code-head"><span class="code-lang">bash</span><button class="copy" type="button">Copiar</button></div>
+<pre><code class="language-bash">curl -X POST "https://matterhorn-backend-xxxxxxxxxx-uc.a.run.app/mhc" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "application_type": "web",
+    "event_name": "teste_curl",
+    "timestamp": 1789080479736,
+    "event_params": { "origem": "terminal", "tentativa": 1 }
+  }'</code></pre>
+  </div>
+  <p>O corpo é lido como JSON mesmo com outro <code>Content-Type</code>, o que permite enviar com <code>navigator.sendBeacon</code>. Todos os campos são opcionais, mas qualquer campo fora do <a href="#ref-schema">esquema</a> faz o BigQuery recusar o evento inteiro.</p>
+
+  <h3 id="ref-respostas">Respostas</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Status</th><th>Corpo</th><th>Quando acontece</th></tr></thead>
+      <tbody>
+        <tr><td class="num"><code>200</code></td><td><code>ok</code></td><td>Evento gravado. Também é a resposta do preflight <code>OPTIONS</code>.</td></tr>
+        <tr><td class="num"><code>400</code></td><td><code>bad request</code></td><td>Corpo vazio, JSON inválido ou JSON que não é um objeto.</td></tr>
+        <tr><td class="num"><code>500</code></td><td><code>erro interno</code></td><td>O BigQuery recusou a linha: campo fora do esquema, tipo errado ou falta de permissão. O motivo vai para o log.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 id="ref-schema">Tabela events_raw</h2>
+  <p>Definida em <code>infra/schemas/events_raw.json</code>. Todas as colunas de primeiro nível são <code>NULLABLE</code>.</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Coluna</th><th>Tipo</th><th>Conteúdo</th></tr></thead>
+      <tbody>
+        <tr><td><code>application_type</code></td><td><code>STRING</code></td><td>Origem do evento. O tracker web envia <code>web</code>.</td></tr>
+        <tr><td><code>url</code></td><td><code>STRING</code></td><td>URL completa, com query string.</td></tr>
+        <tr><td><code>hostname</code></td><td><code>STRING</code></td><td>Domínio da página.</td></tr>
+        <tr><td><code>page_title</code></td><td><code>STRING</code></td><td>Título da página.</td></tr>
+        <tr><td><code>timestamp</code></td><td><code>INTEGER</code></td><td>Momento do evento em milissegundos desde 1970 (UTC), pelo relógio do visitante.</td></tr>
+        <tr><td><code>os</code></td><td><code>STRING</code></td><td>Valor bruto de <code>navigator.platform</code>.</td></tr>
+        <tr><td><code>browser</code></td><td><code>STRING</code></td><td>Navegador detectado pelo tracker.</td></tr>
+        <tr><td><code>device</code></td><td><code>STRING</code></td><td>Tipo de dispositivo detectado pelo tracker.</td></tr>
+        <tr><td><code>language</code></td><td><code>STRING</code></td><td>Idioma do navegador.</td></tr>
+        <tr><td><code>event_name</code></td><td><code>STRING</code></td><td>Nome do evento.</td></tr>
+        <tr><td><code>event_params</code></td><td><code>RECORD</code>, <code>REPEATED</code></td><td>Lista de parâmetros.</td></tr>
+        <tr><td><code>event_params.key</code></td><td><code>STRING</code>, <code>REQUIRED</code></td><td>Nome do parâmetro.</td></tr>
+        <tr><td><code>event_params.value.string_value</code></td><td><code>STRING</code></td><td>Textos, booleanos e JSON.</td></tr>
+        <tr><td><code>event_params.value.int_value</code></td><td><code>INTEGER</code></td><td>Inteiros.</td></tr>
+        <tr><td><code>event_params.value.double_value</code></td><td><code>FLOAT</code></td><td>Números com casas decimais.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 id="ref-env">Variáveis de ambiente do backend</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Variável</th><th>Padrão</th><th>Descrição</th></tr></thead>
+      <tbody>
+        <tr><td><code>PROJECT_ID</code></td><td>projeto das credenciais</td><td>Projeto da tabela de destino.</td></tr>
+        <tr><td><code>DATASET_ID</code></td><td><code>matterhorn_dataset</code></td><td>Dataset de destino.</td></tr>
+        <tr><td><code>TABLE_ID</code></td><td><code>events_raw</code></td><td>Tabela de destino.</td></tr>
+        <tr><td><code>PORT</code></td><td class="num"><code>8080</code></td><td>Porta HTTP. O Cloud Run define sozinho.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>No Cloud Run, as três primeiras são definidas pelo Terraform a partir dos próprios recursos.</p>
+
+  <h2 id="ref-tf-vars">Variáveis do Terraform</h2>
+  <p>Declaradas em <code>infra/variables.tf</code>. Só <code>project_id</code> e <code>image_tag</code> não têm padrão.</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Variável</th><th>Padrão</th><th>Descrição</th></tr></thead>
+      <tbody>
+        <tr><td><code>project_id</code></td><td>obrigatória</td><td>ID do projeto no Google Cloud.</td></tr>
+        <tr><td><code>image_tag</code></td><td>obrigatória</td><td>Tag da imagem em produção, como <code>v7</code>.</td></tr>
+        <tr><td><code>region</code></td><td><code>us-central1</code></td><td>Região do Cloud Run e do Artifact Registry.</td></tr>
+        <tr><td><code>bigquery_location</code></td><td><code>US</code></td><td>Localização do dataset. Não muda depois de criado.</td></tr>
+        <tr><td><code>dataset_id</code></td><td><code>matterhorn_dataset</code></td><td>ID do dataset.</td></tr>
+        <tr><td><code>dataset_friendly_name</code></td><td><code>Matterhorn Events</code></td><td>Nome de exibição do dataset.</td></tr>
+        <tr><td><code>dataset_description</code></td><td><code>Dataset para os eventos Web</code></td><td>Descrição do dataset.</td></tr>
+        <tr><td><code>table_id</code></td><td><code>events_raw</code></td><td>ID da tabela de eventos.</td></tr>
+        <tr><td><code>service_name</code></td><td><code>matterhorn-backend</code></td><td>Nome do serviço no Cloud Run.</td></tr>
+        <tr><td><code>service_account_id</code></td><td><code>matterhorn-cr-sa</code></td><td>ID da service account do serviço.</td></tr>
+        <tr><td><code>service_account_display_name</code></td><td><code>Cloud Run - Ingestão BigQuery</code></td><td>Nome de exibição da service account.</td></tr>
+        <tr><td><code>artifact_repository</code></td><td><code>matterhorn-repo</code></td><td>Repositório Docker no Artifact Registry.</td></tr>
+        <tr><td><code>image_name</code></td><td><code>matterhorn-api</code></td><td>Nome da imagem.</td></tr>
+        <tr><td><code>max_instance_count</code></td><td class="num"><code>3</code></td><td>Teto de instâncias, que também limita o custo.</td></tr>
+        <tr><td><code>cpu</code></td><td><code>1</code></td><td>CPU por instância.</td></tr>
+        <tr><td><code>memory</code></td><td><code>512Mi</code></td><td>Memória por instância.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 id="ref-tf-outputs">Outputs do Terraform</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Output</th><th>Conteúdo</th></tr></thead>
+      <tbody>
+        <tr><td><code>cloud_run_url</code></td><td>URL base do serviço.</td></tr>
+        <tr><td><code>collector_endpoint</code></td><td>URL de coleta com <code>/mhc</code>, pronta para o <code>ENDPOINT</code> do tracker.</td></tr>
+        <tr><td><code>events_table</code></td><td>Tabela no formato <code>projeto.dataset.tabela</code>.</td></tr>
+        <tr><td><code>service_account_email</code></td><td>Service account com que o serviço grava no BigQuery.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 id="ref-arquivos">Arquivos do Terraform</h2>
+  <dl class="defs">
+    <dt>versions.tf</dt><dd>Versão mínima do Terraform e do provider <code>google</code> (série 5.x).</dd>
+    <dt>providers.tf</dt><dd>Projeto e região padrão do provider.</dd>
+    <dt>variables.tf</dt><dd>Todas as entradas, com padrão, descrição e validação.</dd>
+    <dt>bigquery.tf</dt><dd>Dataset e tabela de eventos.</dd>
+    <dt>iam.tf</dt><dd>Service account e papel <code>bigquery.dataEditor</code>.</dd>
+    <dt>cloud_run.tf</dt><dd>Serviço, variáveis de ambiente e acesso público (<code>allUsers</code>).</dd>
+    <dt>outputs.tf</dt><dd>Valores impressos no fim do <code>apply</code>.</dd>
+  </dl>
+</section>
+<section class="panel" id="operacao" role="tabpanel" aria-labelledby="tab-operacao" tabindex="0" hidden>
+  <p class="eyebrow">Operação</p>
+  <h1>Operar e atualizar</h1>
+  <p class="lede">Como publicar versões novas do backend, voltar atrás, acompanhar logs e resolver os problemas mais comuns.</p>
+
+  <h2 id="op-deploy">Publicar uma nova versão</h2>
+  <p>Toda mudança em <code>backend/</code> segue o mesmo ciclo: gerar a imagem com uma tag nova e apontar o Terraform para ela.</p>
+  <ol class="steps">
+    <li>
+      <h3>Gere a imagem</h3>
+      <div class="code">
+        <div class="code-head"><span class="code-lang">bash</span><button class="copy" type="button">Copiar</button></div>
+<pre><code class="language-bash">gcloud builds submit backend \
+  --tag us-central1-docker.pkg.dev/SEU_PROJETO/matterhorn-repo/matterhorn-api:v12</code></pre>
+      </div>
+    </li>
+    <li>
+      <h3>Atualize a tag</h3>
+      <div class="code">
+        <div class="code-head"><span class="code-lang">hcl</span><span class="code-file">infra/terraform.tfvars</span><button class="copy" type="button">Copiar</button></div>
+<pre><code class="language-hcl">image_tag = "v12"</code></pre>
+      </div>
+    </li>
+    <li>
+      <h3>Aplique</h3>
+      <div class="code">
+        <div class="code-head"><span class="code-lang">bash</span><button class="copy" type="button">Copiar</button></div>
+<pre><code class="language-bash">cd infra
+terraform plan    # deve mostrar só a troca de imagem
+terraform apply</code></pre>
+      </div>
+    </li>
+  </ol>
+  <div class="callout caution">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+    <div>
+      <p><strong>Deploy manual volta atrás no próximo apply.</strong> Um <code>gcloud run deploy</code> serve para testar rápido, mas o Terraform não fica sabendo. O próximo <code>apply</code> recoloca a tag que estiver no <code>terraform.tfvars</code>.</p>
+      <p>Se fizer um deploy manual, atualize o <code>image_tag</code> logo em seguida.</p>
+    </div>
+  </div>
+
+  <h2 id="op-rollback">Voltar para uma versão anterior</h2>
+  <p>As imagens antigas continuam no Artifact Registry. Coloque a tag anterior em <code>image_tag</code> e rode <code>terraform apply</code>. Para ver as tags disponíveis:</p>
+  <div class="code">
+    <div class="code-head"><span class="code-lang">bash</span><button class="copy" type="button">Copiar</button></div>
+<pre><code class="language-bash">gcloud artifacts docker tags list \
+  us-central1-docker.pkg.dev/SEU_PROJETO/matterhorn-repo/matterhorn-api</code></pre>
+  </div>
+
+  <h2 id="op-logs">Logs</h2>
+  <p>Cada evento gravado gera uma linha <code>Evento page_view salvo com sucesso!</code>. Falhas aparecem como <code>Erro ao inserir no BigQuery</code>, seguidas do motivo.</p>
+  <div class="code">
+    <div class="code-head"><span class="code-lang">bash</span><button class="copy" type="button">Copiar</button></div>
+<pre><code class="language-bash"># Últimas 50 linhas
+gcloud run services logs read matterhorn-backend --region us-central1 --limit 50
+
+# Acompanhar em tempo real (comando beta, pode pedir um componente extra)
+gcloud beta run services logs tail matterhorn-backend --region us-central1</code></pre>
+  </div>
+  <p>No console, os mesmos logs ficam em <strong>Cloud Run › matterhorn-backend › Registros</strong>.</p>
+
+  <h2 id="op-custos">Custos e limites</h2>
+  <ul>
+    <li><strong>Cloud Run</strong> escala até zero quando não há tráfego. O <code>max_instance_count</code> (3 por padrão) é o teto em picos.</li>
+    <li>Cada evento é uma requisição. O navegador pode fazer um <code>OPTIONS</code> antes, por causa do <code>Content-Type: application/json</code>.</li>
+    <li><strong>BigQuery</strong> cobra o streaming insert por volume, com mínimo de 1 KB por linha, além de armazenamento e consultas. Os valores atuais estão na <a href="https://cloud.google.com/bigquery/pricing" target="_blank" rel="noopener">página de preços</a>.</li>
+  </ul>
+
+  <h2 id="op-seguranca">Segurança</h2>
+  <p>O endpoint precisa ser público para receber eventos de navegadores, e isso tem consequências:</p>
+  <ul>
+    <li>Qualquer pessoa com a URL consegue gravar eventos. Não publique a URL real em repositórios abertos.</li>
+    <li>Restringir o CORS a um domínio (parâmetro <code>origins</code> do <code>CORS()</code> no <code>app.py</code>) impede outros sites de enviarem pelo navegador, mas não barra um <code>curl</code>.</li>
+    <li>O papel <code>bigquery.dataEditor</code> vale para o projeto inteiro. Para limitar ao dataset, troque por <code>google_bigquery_dataset_iam_member</code> em <code>iam.tf</code>.</li>
+    <li>Não mande e-mail, CPF ou outros dados pessoais nos parâmetros.</li>
+  </ul>
+
+  <h2 id="op-problemas">Solução de problemas</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Sintoma</th><th>Causa provável</th><th>O que fazer</th></tr></thead>
+      <tbody>
+        <tr><td>Status <code>0</code> ou erro de CORS no console</td><td>URL errada (faltou <code>/mhc</code>), bloqueador de anúncios ou serviço fora do ar</td><td>Compare o <code>ENDPOINT</code> com <code>terraform output collector_endpoint</code> e teste com o <a href="#ref-api">curl da referência</a>.</td></tr>
+        <tr><td><code>500</code> e <code>no such field</code> no log</td><td>O evento tem um campo que não existe na tabela</td><td>Tire o campo do payload ou adicione a coluna em <code>schemas/events_raw.json</code> e rode <code>apply</code>.</td></tr>
+        <tr><td><code>403</code> ao chamar o endpoint</td><td>Falta o acesso público, ou uma política da organização bloqueia <code>allUsers</code></td><td>Confira o recurso <code>public_access</code> e a política <code>iam.allowedPolicyMemberDomains</code>.</td></tr>
+        <tr><td><code>plan</code> quer trocar a imagem sem você ter mudado nada</td><td>Houve um <code>gcloud run deploy</code> manual</td><td>Coloque a tag que está no ar em <code>image_tag</code>.</td></tr>
+        <tr><td><code>plan</code> quer recriar a tabela</td><td>Mudança incompatível no esquema (remover coluna ou trocar tipo)</td><td>O <code>deletion_protection</code> barra o <code>apply</code>. Faça a migração manualmente no BigQuery.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 id="op-roadmap">Próximas melhorias</h2>
+  <p>Ideias que ficaram fora da v1, na ordem em que fariam mais diferença:</p>
+  <ol>
+    <li>Particionar a tabela por data de ingestão, para baratear as consultas.</li>
+    <li>Registrar no servidor o horário de recebimento, independente do relógio do visitante.</li>
+    <li>ID de visitante e de sessão, para contar usuários.</li>
+    <li>Enviar com <code>navigator.sendBeacon</code>, que sobrevive à troca de página.</li>
+    <li>Evitar o preflight do CORS (enviando <code>text/plain</code>) ou cacheá-lo com <code>max_age</code>.</li>
+    <li>Guardar o estado do Terraform num bucket do Cloud Storage.</li>
+  </ol>
+</section>
+  </main>
+  <aside class="toc" aria-label="Nesta página">
+    <p class="toc-title">Nesta página</p>
+    <ol id="toc-list"></ol>
+  </aside>
+</div>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <span>Matterhorn v1</span>
+    <span>Última atualização: 10 de setembro de 2026</span>
+    <span>Código em <code>backend/</code>, <code>tracker/</code> e <code>infra/</code></span>
+  </div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-hcl.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-sql.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-docker.min.js"></script>
+<script>
+(function () {
+  var tabs = Array.prototype.slice.call(document.querySelectorAll(".tab"));
+  var panels = Array.prototype.slice.call(document.querySelectorAll(".panel"));
+  var tocList = document.getElementById("toc-list");
+  var observer = null;
+
+  function setHash(id) {
+    try { history.replaceState(null, "", "#" + id); } catch (e) { /* sandbox sem history */ }
+  }
+
+  function buildToc(panel) {
+    tocList.innerHTML = "";
+    if (observer) observer.disconnect();
+    var headings = panel.querySelectorAll("h2[id]");
+    var links = {};
+    headings.forEach(function (h) {
+      var li = document.createElement("li");
+      var a = document.createElement("a");
+      a.href = "#" + h.id;
+      a.textContent = h.textContent;
+      li.appendChild(a);
+      tocList.appendChild(li);
+      links[h.id] = a;
+    });
+    if (!("IntersectionObserver" in window) || !headings.length) return;
+    observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        Object.keys(links).forEach(function (id) { links[id].removeAttribute("aria-current"); });
+        links[entry.target.id].setAttribute("aria-current", "true");
+      });
+    }, { rootMargin: "-120px 0px -65% 0px" });
+    headings.forEach(function (h) { observer.observe(h); });
+    links[headings[0].id].setAttribute("aria-current", "true");
+  }
+
+  function activate(id, opts) {
+    opts = opts || {};
+    var found = false;
+    tabs.forEach(function (tab) {
+      var on = tab.getAttribute("aria-controls") === id;
+      tab.setAttribute("aria-selected", on ? "true" : "false");
+      tab.tabIndex = on ? 0 : -1;
+      if (on) {
+        found = true;
+        if (opts.focus) tab.focus();
+        if (tab.scrollIntoView) tab.scrollIntoView({ block: "nearest", inline: "nearest" });
+      }
+    });
+    if (!found) return false;
+    panels.forEach(function (p) { p.hidden = p.id !== id; });
+    buildToc(document.getElementById(id));
+    return true;
+  }
+
+  // Aceita tanto o id de uma aba (#implantacao) quanto o de uma seção
+  // dentro dela (#impl-terraform).
+  function route(hash, scroll) {
+    var id = (hash || "").replace(/^#/, "");
+    if (!id) { activate("visao-geral"); return; }
+    if (activate(id)) {
+      if (scroll) window.scrollTo(0, 0);
+      return;
+    }
+    var target = document.getElementById(id);
+    var panel = target && target.closest(".panel");
+    if (panel) {
+      activate(panel.id);
+      requestAnimationFrame(function () { target.scrollIntoView(); });
+    }
+  }
+
+  tabs.forEach(function (tab, i) {
+    tab.addEventListener("click", function () {
+      var id = tab.getAttribute("aria-controls");
+      activate(id);
+      setHash(id);
+      window.scrollTo(0, 0);
+    });
+    tab.addEventListener("keydown", function (e) {
+      var next = null;
+      if (e.key === "ArrowRight") next = tabs[(i + 1) % tabs.length];
+      if (e.key === "ArrowLeft") next = tabs[(i - 1 + tabs.length) % tabs.length];
+      if (e.key === "Home") next = tabs[0];
+      if (e.key === "End") next = tabs[tabs.length - 1];
+      if (!next) return;
+      e.preventDefault();
+      var id = next.getAttribute("aria-controls");
+      activate(id, { focus: true });
+      setHash(id);
+    });
+  });
+
+  // Links internos (#aba ou #secao) trocam de aba sem recarregar.
+  document.addEventListener("click", function (e) {
+    var a = e.target.closest("a[href^='#']");
+    if (!a) return;
+    var id = a.getAttribute("href").slice(1);
+    if (!id) return;
+    var isTab = tabs.some(function (t) { return t.getAttribute("aria-controls") === id; });
+    var target = document.getElementById(id);
+    if (!isTab && !target) return;
+    e.preventDefault();
+    setHash(id);
+    route("#" + id, true);
+  });
+
+  window.addEventListener("hashchange", function () { route(location.hash, true); });
+
+  // Abas de código: variações do mesmo exemplo.
+  document.querySelectorAll(".ctabs").forEach(function (group) {
+    var buttons = group.querySelectorAll(".ctab");
+    var views = group.querySelectorAll(".ctab-panel");
+    buttons.forEach(function (btn, i) {
+      btn.addEventListener("click", function () {
+        buttons.forEach(function (b, j) { b.setAttribute("aria-selected", i === j ? "true" : "false"); });
+        views.forEach(function (v, j) { v.hidden = i !== j; });
+      });
+    });
+  });
+
+  // Botão de copiar em cada bloco de código.
+  document.querySelectorAll(".code").forEach(function (block) {
+    var btn = block.querySelector(".copy");
+    var pre = block.querySelector("pre");
+    if (!btn || !pre) return;
+    btn.addEventListener("click", function () {
+      var text = pre.innerText.replace(/\n$/, "");
+      function done(label) {
+        btn.textContent = label;
+        btn.classList.add("is-done");
+        setTimeout(function () { btn.textContent = "Copiar"; btn.classList.remove("is-done"); }, 1600);
+      }
+      function fallback() {
+        var range = document.createRange();
+        range.selectNodeContents(pre);
+        var sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+        var ok = false;
+        try { ok = document.execCommand("copy"); } catch (e) { ok = false; }
+        done(ok ? "Copiado" : "Selecionado, use Ctrl+C");
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function () { done("Copiado"); }, fallback);
+      } else {
+        fallback();
+      }
+    });
+  });
+
+  route(location.hash, false);
+})();
+</script>
+</body>
+</html>

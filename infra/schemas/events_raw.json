@@ -1,0 +1,30 @@
+[
+  {"name": "application_type", "type": "STRING", "mode": "NULLABLE"},
+  {"name": "url", "type": "STRING", "mode": "NULLABLE"},
+  {"name": "hostname", "type": "STRING", "mode": "NULLABLE"},
+  {"name": "page_title", "type": "STRING", "mode": "NULLABLE"},
+  {"name": "timestamp", "type": "INTEGER", "mode": "NULLABLE"},
+  {"name": "os", "type": "STRING", "mode": "NULLABLE"},
+  {"name": "browser", "type": "STRING", "mode": "NULLABLE"},
+  {"name": "device", "type": "STRING", "mode": "NULLABLE"},
+  {"name": "language", "type": "STRING", "mode": "NULLABLE"},
+  {"name": "event_name", "type": "STRING", "mode": "NULLABLE"},
+  {
+    "name": "event_params",
+    "type": "RECORD",
+    "mode": "REPEATED",
+    "fields": [
+      {"name": "key", "type": "STRING", "mode": "REQUIRED"},
+      {
+        "name": "value",
+        "type": "RECORD",
+        "mode": "NULLABLE",
+        "fields": [
+          {"name": "string_value", "type": "STRING", "mode": "NULLABLE"},
+          {"name": "int_value", "type": "INTEGER", "mode": "NULLABLE"},
+          {"name": "double_value", "type": "FLOAT", "mode": "NULLABLE"}
+        ]
+      }
+    ]
+  }
+]
