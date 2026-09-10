@@ -5,6 +5,8 @@ projeto do Google Cloud. Um script no site envia os eventos para um serviço no
 Cloud Run, que grava cada um no BigQuery com o mesmo formato de `event_params`
 do export do GA4.
 
+<img width="1024" height="559" alt="image" src="https://github.com/user-attachments/assets/6cc76d57-510d-4efc-b27d-0db6ce8d132b" />
+
 Esta é a primeira versão: um endpoint, uma tabela e o mínimo de
 infraestrutura para colocar a coleta no ar.
 
